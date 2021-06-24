@@ -1,0 +1,40 @@
+base_images:
+  ubi8-python36:
+    name: builder
+    namespace: ocp
+    tag: ubi8.python.36
+build_root:
+  image_stream_tag:
+    name: release
+    namespace: openshift
+    tag: golang-1.13
+images:
+- dockerfile_path: Dockerfile.build
+  to: assisted-installer-deployment-build
+- dockerfile_literal: |
+    FROM python36
+    RUN pip3 install pip --upgrade && pip3 install pycodestyle
+    COPY . .
+    CMD /bin/bash
+  from: src
+  inputs:
+    ubi8-python36:
+      as:
+      - python36
+  to: pycodestyle
+resources:
+  '*':
+    limits:
+      memory: 4Gi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+tests:
+- as: pep8
+  commands: pycodestyle .
+  container:
+    from: pycodestyle
+zz_generated_metadata:
+  branch: master
+  org: openshift-assisted
+  repo: assisted-installer-deployment
